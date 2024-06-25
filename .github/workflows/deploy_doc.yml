@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Build website
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
   pages: write
 
 jobs:
-  build:
+  build_website:
 
     environment:
       name: github-pages

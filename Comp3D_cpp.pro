@@ -26,8 +26,10 @@ win32 {
 CONFIG -= console
 CONFIG += c++14 -Wno-error=date-time
 
-#test if ccache is installed
-system("ccache -V"): CONFIG += ccache
+unix {
+    #test if ccache is installed
+    system("ccache -V"): CONFIG += ccache
+}
 
 QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
 
