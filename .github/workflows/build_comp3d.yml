@@ -153,20 +153,8 @@ jobs:
       run: |
           git fetch --all --tags -f
 
-    - name: Configure MSVC
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-          arch: x64
-          spectre: true
-
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
-
-    - name: Install NSIS
-      run: |
-           Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-           scoop bucket add extras
-           scoop install nsis
 
     - name: Install Miniconda 
       uses: conda-incubator/setup-miniconda@v3
@@ -178,18 +166,20 @@ jobs:
       if: steps.cache-conda-gdal.outputs.cache-hit != 'true'
 
     - name: Build Comp3D
+      shell: bash
       run: |
         mkdir -p autobuild
         cd autobuild
-        qmake ..\Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
-        nmake
+        qmake ../Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
+        make
 
     - name: Build tests
       working-directory: ./tests
+      shell: bash
       run: |
         mkdir -p autobuild
         cd autobuild
-        qmake ..\tests.pro CONFIG+=release
+        qmake ../tests.pro CONFIG+=release
         nmake
 
     - name: Run tests
