@@ -58,7 +58,7 @@ find_package(Boost ${BOOST_VERSION_MIN} REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 # Proj
 set(PROJ_ROOT /usr/local/proj82)
-find_package(PROJ 8.2.1 REQUIRED)
+find_package(PROJ 9.2.1 REQUIRED)
 
 # Qt
 set (QT_COMPONENTS Widgets)

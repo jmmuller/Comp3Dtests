@@ -38,9 +38,9 @@ class Info
 public:
     Info();
     //__attribute__ to have printf warnings (when using std::string for %s, ...)
-    void msg(unsigned subjects, unsigned depth, const char * format, ...)    __attribute__ ((format (printf,4,5)));
-    void error(unsigned subjects, unsigned depth, const char * format, ...)   __attribute__ ((format (printf,4,5)));
-    void warning(unsigned subjects, unsigned depth, const char * format, ...) __attribute__ ((format (printf,4,5)));
+    void msg(unsigned subjects, unsigned depth, const char * format, ...);  //  __attribute__ ((format (printf,4,5)));
+    void error(unsigned subjects, unsigned depth, const char * format, ...); //  __attribute__ ((format (printf,4,5)));
+    void warning(unsigned subjects, unsigned depth, const char * format, ...); // __attribute__ ((format (printf,4,5)));
     bool isEmpty(){return mStreamRaw.str().size()==0;}
     void clear();
 

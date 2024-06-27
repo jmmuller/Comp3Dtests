@@ -64,4 +64,5 @@ doc_uni/??/
 build*
 /CCACHE_DOCKER/*
 !/CCACHE_DOCKER/ccache.conf
+vcpkg_installed/
 

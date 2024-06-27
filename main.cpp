@@ -29,7 +29,7 @@
 
 #include <iostream>
 #include <string>
-#include <getopt.h>
+//#include <getopt.h>
 //#include <Eigen/Dense>
 #include <locale.h>
 #include "src/project.h"
@@ -150,6 +150,7 @@ void usage(const std::string& msg = "")
 
 int main_auto(int argc, char *argv[])
 {
+#if 0
     int c;
     bool force_lang=false;
 
@@ -250,5 +251,6 @@ int main_auto(int argc, char *argv[])
     Project::prepareJson(project.filename,project.config.name);
   #endif
     std::cout<<"Computation duration: "<<to_simple_string(project.lsquares.computation_end-project.lsquares.computation_start)<<std::endl;
+#endif
     return 0;
 }

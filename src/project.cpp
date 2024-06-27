@@ -1765,9 +1765,9 @@ bool Project::exportSINEX(const std::string &filename,std::vector<Point*> &selec
         struct tm genTime{},obsTime{};
 
         time_t timestamp = time( nullptr );
-        gmtime_r(&timestamp, &genTime);
+//        gmtime_r(&timestamp, &genTime);
         timestamp = jsonSINEX.get("obsTime",0).asInt64();
-        gmtime_r(&timestamp, &obsTime);
+//        gmtime_r(&timestamp, &obsTime);
         FortranFormat::FFormat fmt;
         
         sinexFile << fmt.toStringf(

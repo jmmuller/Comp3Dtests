@@ -1,0 +1,15 @@
+{
+  "dependencies": [
+    "boost-filesystem","boost-date-time", "boost-graph","boost-math","boost-config",
+    "qt5-base","qt5-tools",
+    "eigen3",
+    "proj"
+  ],
+  "overrides": [
+    {
+      "name": "proj",
+      "version": "9.2.1"
+    }
+  ],
+  "builtin-baseline": "94a50e8c1357d423840e22451e122f56d62b5c20"
+}
