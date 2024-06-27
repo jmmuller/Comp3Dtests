@@ -31,7 +31,11 @@ unix {
     system("ccache -V"): CONFIG += ccache
 }
 
-QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
+unix {
+  QMAKE_CXXFLAGS += -isystem
+}
+
+QMAKE_CXXFLAGS += $$[QT_INSTALL_HEADERS]
 
 SOURCES += main.cpp \
     gui/customtablewidgetitem.cpp \

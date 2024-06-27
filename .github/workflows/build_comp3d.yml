@@ -81,8 +81,6 @@ jobs:
         tar -xf eigen-3.3.8.tar.gz
         sudo mkdir -p /usr/local/include/eigen3
         sudo cp -R eigen-3.3.8/Eigen/ /usr/local/include/eigen3/Eigen/
-        sudo mkdir -p /usr/lib/mxe/usr/i686-w64-mingw32.static/include/eigen3
-        sudo cp -R eigen-3.3.8/Eigen/ /usr/lib/mxe/usr/i686-w64-mingw32.static/include/eigen3/Eigen/
 
     - name: Install appimage
       run: |
@@ -170,10 +168,22 @@ jobs:
           url:    http://download.qt.io/official_releases/jom/jom.zip
           target: ${{ runner.temp }}\
 
-    - name: (5) Unzip JOM
+    - name: Unzip JOM
       working-directory: ${{ runner.temp }}
       run:  |
               7z x jom.zip -ojom
+
+    - name: Download eigen
+      uses: suisei-cn/actions-download-file@v1
+      with:
+          url:    https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.zip
+          target: ${{ runner.temp }}\
+
+    - name: Unzip eigen
+      working-directory: ${{ runner.temp }}
+      run:  |
+              7z x eigen-3.3.8.zip -o${{ github.workspace }}\src
+              ren ${{ github.workspace }}\src\eigen-3.3.8 ${{ github.workspace }}\src\eigen3
 
     - name: Install Miniconda 
       uses: conda-incubator/setup-miniconda@v3
@@ -188,11 +198,16 @@ jobs:
       uses: egor-tensin/vs-shell@v2
       with:
           arch: x64
-          
+
     - name: Build Comp3D
       shell: cmd
       run: |
+        echo "temp:"
         dir ${{ runner.temp }}
+        echo "workspace:"
+        dir ${{ github.workspace }}
+        echo "src:"
+        dir ${{ github.workspace }}\src
         mkdir -p autobuild
         cd autobuild
         qmake ..\Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
