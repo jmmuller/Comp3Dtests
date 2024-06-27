@@ -204,6 +204,10 @@ jobs:
       with:
           arch: x64
 
+    - name: Install boost with miniconda
+      run: |
+           conda install -y boost
+      
     - name: Build Comp3D
       shell: cmd
       run: |
