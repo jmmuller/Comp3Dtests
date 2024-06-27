@@ -191,7 +191,12 @@ jobs:
          auto-update-conda: true
           
     - name: Install PROJ with miniconda
-      run: conda install -y proj
+      run: |
+           conda install -y proj
+           $env:CONDA_PREFIX=(conda info --base) + "\envs"
+           echo CONDA_PREFIX=$env:CONDA_PREFIX >> $env:GITHUB_ENV
+           echo "CONDA: " $env:CONDA_PREFIX
+           dir $env:CONDA_PREFIX
       if: steps.cache-conda-gdal.outputs.cache-hit != 'true'
 
     - name: Set up Visual Studio shell
@@ -210,7 +215,8 @@ jobs:
         dir ${{ github.workspace }}\src
         mkdir -p autobuild
         cd autobuild
-        qmake ..\Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
+        set PATH=%PATH%;%CONDA_PREFIX%\Library\bin
+        qmake ..\Comp3D_cpp.pro CONFIG+=release INCLUDEPATH+=%CONDA_PREFIX%\Library\include LIBS+=-L%CONDA_PREFIX%\Library\lib COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
         ${{ runner.temp }}\jom\jom
 
     - name: Build tests
