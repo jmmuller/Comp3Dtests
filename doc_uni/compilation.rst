@@ -27,8 +27,8 @@ Packages
 
 .. code-block:: bash
 
-    sudo apt install libboost-all-dev qttools5-dev-tools qt5-qmake qtbase5-dev \
-                     libeigen3-dev proj-data libclang-common-11-dev
+    sudo apt install cmake libboost-all-dev qttools5-dev-tools qtbase5-dev \
+                     libeigen3-dev libclang-common-11-dev qttools5-dev
 
 Proj
 ~~~~
@@ -58,7 +58,9 @@ Compile proj-8.2 :
     wget https://download.osgeo.org/proj/proj-8.2.1.tar.gz
     tar -xf proj-8.2.1.tar.gz
     cd proj-8.2.1
-    ./configure --prefix=/usr/local/proj82/ --enable-static --disable-shared --without-curl --disable-tiff
+    mkdir build
+    cd build
+    cmake .. -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF  -DENABLE_CURL=OFF -DENABLE_TIFF=OFF -DCMAKE_INSTALL_PREFIX=/usr/local/proj82
     make
 
 .. code-block:: bash
@@ -85,7 +87,7 @@ Project setup:
 
     mkdir build
     cd build
-    qmake ../Comp3D_cpp.pro
+    cmake ../Comp3D_cpp.pro
 
 Compilation:
 
@@ -102,14 +104,17 @@ To compile the tests:
 .. code-block:: bash
 
     cd tests
-    qmake CONFIG+=release
+    mkdir build
+    cd build
+    cmake CONFIG+=release
     make
+    cd ..
 
 Then run the tests from ``tests/`` directory:
 
 .. code-block:: bash
 
-    ./Comp3D_tests
+    ./build/Comp3D_tests
 
 
 .. _compileauto:

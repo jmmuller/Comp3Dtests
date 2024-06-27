@@ -3,7 +3,7 @@ execute_process(COMMAND git log --pretty=format:'%h' -n 1
                 ERROR_QUIET)
 
 if ("${GIT_REV}" STREQUAL "")
-	set(GIT_VERSION "N/A")
+    set(GIT_VERSION "N/A")
 else()
     execute_process(COMMAND git describe --dirty OUTPUT_VARIABLE GIT_VERSION ERROR_QUIET)
     string(STRIP "${GIT_VERSION}" GIT_VERSION)

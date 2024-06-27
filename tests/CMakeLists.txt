@@ -2,45 +2,23 @@
 ##        General
 #######################################################
 cmake_minimum_required(VERSION 3.15)
-project(Comp3D)
-set(COMP3D_TARGET Comp3D)
+project(Comp3D_tests)
+set(COMP3D_TARGET Comp3D_tests)
 
 # strict C++17 required
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(TRANSLATIONS fr)
-
 #######################################################
 ##        Options
 #######################################################
 
-option(ADD_PROJ_CC  "Add proj CC" ON)
-option(ADD_PROJ_NTF "Add proj NTF" ON)
-option(ADD_PROJ_UTM "Add Proj UTM" OFF)
-
-option(USE_AUTO "Automatic mode" ON)
-option(USE_SIM "Simulation" ON)
-
-option(USE_GUI "Simultation" ON)
-if (NOT ${USE_GUI})
-  option(USE_RES "ressources" ON)
-else()
-  set(USE_RES ON CACHE BOOL "ressources" FORCE)
-endif()
-
-if (NOT ${USE_RES})
-  option(USE_QT "QT" ON)
-else()
-  set(USE_QT ON CACHE BOOL "QT" FORCE)
-endif()
-
-set(COMP3D_DOC_DIR "${CMAKE_SOURCE_DIR}/doc_uni" CACHE PATH "Path to doc")
-if ("${COMP3D_DOC_DIR}" STREQUAL "")
-  set(COMP3D_DOC_DIR "${CMAKE_SOURCE_DIR}/doc_uni" CACHE PATH "Path to doc" FORCE)
-endif()
-
+set(ADD_PROJ_CC ON)
+set(ADD_PROJ_NTF ON)
+set(ADD_PROJ_UTM ON)
+set(USE_QT ON)
+set(USE_RES ON)
 
 #######################################################
 ##        Dependencies
@@ -61,10 +39,10 @@ set(PROJ_ROOT /usr/local/proj82)
 find_package(PROJ 8.2.1 REQUIRED)
 
 # Qt
-set (QT_COMPONENTS Widgets)
+set (QT_COMPONENTS Widgets Test)
 set (QT_COMPONENTS_FULL ${QT_COMPONENTS})
 list (TRANSFORM QT_COMPONENTS_FULL PREPEND Qt5::)
-find_package(Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS} LinguistTools)
+find_package(Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS})
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -93,98 +71,60 @@ target_compile_options(COMP3D_compiler_flags INTERFACE
     "$<$<CONFIG:RelWithDebInfo>:$<$<CXX_COMPILER_ID:MSVC>:/bigobj>>"
 )
 
-
 #######################################################
 ##     Versionning
 #######################################################
 ADD_CUSTOM_COMMAND(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
     COMMAND ${CMAKE_COMMAND} -P
-            ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
+            ${CMAKE_CURRENT_SOURCE_DIR}/../version.cmake)
 
 #######################################################
 ##        Sources
 #######################################################
 
 set(SOURCES
-    main.cpp
-    lib_ex.cpp
-    src/fformat.cpp
-    src/filerefjson.cpp
-    src/leastsquares.cpp
-    src/misc_tools.cpp
-    src/obs.cpp
-    src/point.cpp
-    src/coord.cpp
-    src/projection.cpp
-    src/station.cpp
-    src/station_eq.cpp
-    src/station_simple.cpp
-    src/parameter.cpp
-    src/project.cpp
-    src/mathtools.cpp
-    src/station_hz.cpp
-    src/jsoncpp.cpp
-    src/project_config.cpp
-    src/datafile.cpp
-    src/ellipsoid.cpp
-    src/station_axis.cpp
-    src/axisobs.cpp
-    src/station_bascule.cpp
-    src/matrixordering.cpp
-    src/info.cpp
-    src/varcovarmatrix.cpp
+    ../src/fformat.cpp
+    ../src/filerefjson.cpp
+    ../src/leastsquares.cpp
+    ../src/misc_tools.cpp
+    ../src/obs.cpp
+    ../src/point.cpp
+    ../src/coord.cpp
+    ../src/projection.cpp
+    ../src/station.cpp
+    ../src/station_eq.cpp
+    ../src/station_simple.cpp
+    ../src/parameter.cpp
+    ../src/project.cpp
+    ../src/mathtools.cpp
+    ../src/station_hz.cpp
+    ../src/jsoncpp.cpp
+    ../src/project_config.cpp
+    ../src/datafile.cpp
+    ../src/ellipsoid.cpp
+    ../src/station_axis.cpp
+    ../src/axisobs.cpp
+    ../src/station_bascule.cpp
+    ../src/matrixordering.cpp
+    ../src/info.cpp
+    ../src/varcovarmatrix.cpp
+    tests_coord.cpp
+    tests_main.cpp
+    tests_basc.cpp
+    compcompare.cpp
+    tests_nonreg.cpp
+    tests_stab.cpp
 )
 
-set(SOURCES_GUI
-    gui/customtablewidgetitem.cpp
-    gui/exportcoorddialog.cpp
-    gui/infinityasctobasdialog.cpp
-    gui/sinexdialog.cpp
-    gui/maintables.cpp
-    gui/mainwindow.cpp
-    gui/calcthread.cpp
-    gui/configdialog.cpp
-    gui/errordialog.cpp
-    gui/applytransfodialog.cpp
-    gui/sightmatrixdialog.cpp
-    gui/conversiondialog.cpp
-    gui/dialogpreferences.cpp
-    gui/framewidget.cpp
-    gui/multisorttable.cpp
-    gui/exportpointsdialog.cpp
-)
-
-#######################################################
-##        Translation
-#######################################################
-list (TRANSFORM TRANSLATIONS PREPEND "Comp3D_")
-set(TS_FILES ${TRANSLATIONS})
-list (TRANSFORM TS_FILES PREPEND "gui/translations/")
-list (TRANSFORM TS_FILES APPEND ".ts")
-
-set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/i18n")
-qt5_add_translation(QM_FILES ${TS_FILES})
-
-set (QM_FILES_QRC ${TRANSLATIONS})
-list (TRANSFORM QM_FILES_QRC PREPEND "<file>i18n/")
-list (TRANSFORM QM_FILES_QRC APPEND ".qm</file>\n")
-file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/cmake_qm.qrc" 
-"
-<RCC>
-  <qresource>
-  ${QM_FILES_QRC}
-  </qresource>
-</RCC>
-")
 
 #######################################################
 ##        Target
 #######################################################
 
-add_executable(${COMP3D_TARGET} ${SOURCES} ${SOURCES_GUI} ressource.qrc ${CMAKE_BINARY_DIR}/cmake_qm.qrc ${CMAKE_BINARY_DIR}/git_revision.cpp )
+add_executable(${COMP3D_TARGET} ${SOURCES} ../ressource.qrc ${CMAKE_BINARY_DIR}/../git_revision.cpp )
 
-target_include_directories (${COMP3D_TARGET} PRIVATE src gui . ${PROJ_INCLUDE_DIRS})
+target_include_directories (${COMP3D_TARGET} PRIVATE ../src . ${PROJ_INCLUDE_DIRS})
 target_link_libraries (${COMP3D_TARGET} PRIVATE COMP3D_compiler_flags ${BOOST_COMPONENTS_FULL} ${QT_COMPONENTS_FULL} ${PROJ_LIBRARIES} Eigen3::Eigen)
 
 target_compile_definitions(${COMP3D_TARGET} PRIVATE
@@ -192,11 +132,8 @@ target_compile_definitions(${COMP3D_TARGET} PRIVATE
 	$<$<BOOL:${ADD_PROJ_CC}>:ADD_PROJ_CC>
 	$<$<BOOL:${ADD_PROJ_NTF}>:ADD_PROJ_NTF>
 	$<$<BOOL:${ADD_PROJ_UTM}>:ADD_PROJ_UTM>
-	$<$<BOOL:${USE_AUTO}>:USE_AUTO>
-	$<$<BOOL:${USE_SIM}>:USE_SIM>
 	$<$<BOOL:${USE_QT}>:USE_QT>
 	$<$<BOOL:${USE_RES}>:USE_RES>
-	$<$<BOOL:${USE_GUI}>:USE_GUI>
 )
 
 
