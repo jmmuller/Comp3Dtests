@@ -1,3 +1,6 @@
+#######################################################
+##        General
+#######################################################
 cmake_minimum_required(VERSION 3.15)
 project(Comp3D VERSION 1.0)
 set(COMP3D_TARGET Comp3D)
@@ -7,15 +10,66 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(TRANSLATIONS fr)
+
+#######################################################
+##        Options
+#######################################################
+
+option(ADD_PROJ_CC  "Add proj CC" ON)
+option(ADD_PROJ_NTF "Add proj NTF" ON)
+option(ADD_PROJ_UTM "Add Proj UTM" OFF)
+
+option(USE_AUTO "Automatic mode" ON)
+option(USE_SIM "Simulation" ON)
+
+option(USE_GUI "Simultation" ON)
+if (NOT ${USE_GUI})
+  option(USE_RES "ressources" ON)
+else()
+  set(USE_RES ON CACHE BOOL "ressources" FORCE)
+endif()
+
+if (NOT ${USE_RES})
+  option(USE_QT "QT" ON)
+else()
+  set(USE_QT ON CACHE BOOL "QT" FORCE)
+endif()
+
+set(COMP3D_DOC_DIR "${CMAKE_SOURCE_DIR}/doc_uni" CACHE PATH "Path to doc")
+if ("${COMP3D_DOC_DIR}" STREQUAL "")
+  set(COMP3D_DOC_DIR "${CMAKE_SOURCE_DIR}/doc_uni" CACHE PATH "Path to doc" FORCE)
+endif()
+
+
 #######################################################
 ##        Dependencies
 #######################################################
+
+# Eigen
+find_package(Eigen3 REQUIRED NO_MODULE)
+
+# Boost
 set (BOOST_VERSION_MIN 1.74.0)
 set (BOOST_COMPONENTS system filesystem date_time graph)
 set (BOOST_COMPONENTS_FULL ${BOOST_COMPONENTS})
 list (TRANSFORM BOOST_COMPONENTS_FULL PREPEND Boost::)
-find_package(Boost ${BOOST_VERSION_MIN} REQUIRED
-	COMPONENTS ${BOOST_COMPONENTS})
+find_package(Boost ${BOOST_VERSION_MIN} REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+
+# Proj
+set(PROJ_ROOT /usr/local/proj81)
+find_package(PROJ 8.2.1 REQUIRED)
+
+
+# Qt
+set (QT_COMPONENTS Widgets)
+set (QT_COMPONENTS_FULL ${QT_COMPONENTS})
+list (TRANSFORM QT_COMPONENTS_FULL PREPEND Qt5::)
+find_package(Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS} LinguistTools)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
 
 #######################################################
 ##        Compilation toolchain
@@ -40,12 +94,14 @@ target_compile_options(COMP3D_compiler_flags INTERFACE
     "$<$<CONFIG:RelWithDebInfo>:$<$<CXX_COMPILER_ID:MSVC>:/bigobj>>"
 )
 
-#######################################################
-##      PROJ
-#######################################################
 
-add_subdirectory(proj)
-
+#######################################################
+##     Versionning
+#######################################################
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp
+    COMMAND ${CMAKE_COMMAND} -P
+            ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake)
 
 #######################################################
 ##        Sources
@@ -101,200 +157,48 @@ set(SOURCES_GUI
 )
 
 #######################################################
+##        Translation
+#######################################################
+list (TRANSFORM TRANSLATIONS PREPEND "Comp3D_")
+set(TS_FILES ${TRANSLATIONS})
+list (TRANSFORM TS_FILES PREPEND "gui/translations/")
+list (TRANSFORM TS_FILES APPEND ".ts")
+
+set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/i18n")
+qt5_add_translation(QM_FILES ${TS_FILES})
+
+
+set (QM_FILES_QRC ${TRANSLATIONS})
+list (TRANSFORM QM_FILES_QRC PREPEND "<file>i18n/")
+list (TRANSFORM QM_FILES_QRC APPEND ".qm</file>\n")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/cmake_qm.qrc" 
+"
+<RCC>
+  <qresource>
+  ${QM_FILES_QRC}
+  </qresource>
+</RCC>
+")
+
+#######################################################
 ##        Target
 #######################################################
 
-add_executable(${COMP3D_TARGET} ${SOURCES})
-target_link_libraries (${COMP3D_TARGET} PRIVATE COMP3D_compiler_flags ${BOOST_COMPONENTS_FULL})
-target_include_directories (${COMP3D_TARGET} PRIVATE src)
+add_executable(${COMP3D_TARGET} ${SOURCES} ${SOURCES_GUI} ressource.qrc ${CMAKE_BINARY_DIR}/cmake_qm.qrc ${CMAKE_BINARY_DIR}/git_revision.cpp )
 
-#[===[
-QMAKE_PRE_LINK = 'echo "const char *GIT_VERSION=\\"`cd $$PWD; git describe --dirty`\\""\\; > git_revision.cpp ; $(CC) -c $(CFLAGS) -o git_revision.o git_revision.cpp'
+target_include_directories (${COMP3D_TARGET} PRIVATE src gui . ${PROJ_INCLUDE_DIRS})
+target_link_libraries (${COMP3D_TARGET} PRIVATE COMP3D_compiler_flags ${BOOST_COMPONENTS_FULL} ${QT_COMPONENTS_FULL} ${PROJ_LIBRARIES} Eigen3::Eigen)
 
-LIBS += git_revision.o
-
-DEFINES += USE_GUI USE_SIM USE_AUTO
-DEFINES += ADD_PROJ_CC ADD_PROJ_NTF
-
-# If COMP3D_DOC_DIR is not defined on command line, set it to [source_path]/doc_uni
-# To define it on command line : qmake comp3d.pro COMP3D_DOC_DIR="/my/path"
-# (see also mainwindow::showHelp() )
-!defined(COMP3D_DOC_DIR, var) {
-    COMP3D_DOC_DIR="$$PWD/doc_uni"
-}
-DEFINES += COMP3D_DOC_DIR=\\\"$$COMP3D_DOC_DIR\\\"
-
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = Comp3D
-TEMPLATE = app
-win32 {
-    RC_ICONS = gui/icon.ico
-}
-
-CONFIG -= console
-CONFIG += c++14 -Wno-error=date-time
-
-#test if ccache is installed
-system("ccache -V"): CONFIG += ccache
-
-QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
-
-SOURCES += main.cpp \
-    gui/customtablewidgetitem.cpp \
-    gui/exportcoorddialog.cpp \
-    gui/infinityasctobasdialog.cpp \
-    gui/sinexdialog.cpp \
-    gui/maintables.cpp \
-    lib_ex.cpp \
-    src/fformat.cpp \
-    src/filerefjson.cpp \
-    src/leastsquares.cpp \
-    src/misc_tools.cpp \
-    src/obs.cpp \
-    src/point.cpp \
-    src/coord.cpp \
-    src/projection.cpp \
-    src/station.cpp \
-    src/station_eq.cpp \
-    src/station_simple.cpp \
-    src/parameter.cpp \
-    src/project.cpp \
-    src/mathtools.cpp \
-    src/station_hz.cpp \
-    src/jsoncpp.cpp \
-    #src/confidenceinterval.cpp \
-    src/project_config.cpp \
-    src/datafile.cpp \
-    src/ellipsoid.cpp \
-    src/station_axis.cpp \
-    src/axisobs.cpp \
-    src/station_bascule.cpp \
-    src/matrixordering.cpp \
-    gui/mainwindow.cpp \
-    gui/calcthread.cpp \
-    gui/configdialog.cpp \
-    gui/errordialog.cpp \
-    gui/applytransfodialog.cpp \
-    gui/sightmatrixdialog.cpp \
-    gui/conversiondialog.cpp \
-    src/info.cpp \
-    gui/dialogpreferences.cpp \
-    gui/framewidget.cpp \
-    gui/multisorttable.cpp \
-    gui/exportpointsdialog.cpp \
-    src/varcovarmatrix.cpp
+target_compile_definitions(${COMP3D_TARGET} PRIVATE
+	COMP3D_DOC_DIR="${COMP3D_DOC_DIR}"
+	$<$<BOOL:${ADD_PROJ_CC}>:ADD_PROJ_CC>
+	$<$<BOOL:${ADD_PROJ_NTF}>:ADD_PROJ_NTF>
+	$<$<BOOL:${ADD_PROJ_UTM}>:ADD_PROJ_UTM>
+	$<$<BOOL:${USE_AUTO}>:USE_AUTO>
+	$<$<BOOL:${USE_SIM}>:USE_SIM>
+	$<$<BOOL:${USE_QT}>:USE_QT>
+	$<$<BOOL:${USE_RES}>:USE_RES>
+	$<$<BOOL:${USE_GUI}>:USE_GUI>
+)
 
 
-INCLUDEPATH += src
-
-HEADERS += \
-    gui/customtablewidgetitem.h \
-    gui/exportcoorddialog.h \
-    gui/infinityasctobasdialog.h \
-    gui/sinexdialog.h \
-    gui/maintables.h \
-    src/fformat.h \
-    src/filerefjson.h \
-    src/leastsquares.h \
-    src/misc_tools.h \
-    src/obs.h \
-    src/point.h \
-    src/coord.h \
-    src/projection.h \
-    src/station.h \
-    src/station_eq.h \
-    src/station_simple.h \
-    src/parameter.h \
-    src/project.h \
-    src/mathtools.h \
-    src/station_hz.h \
-    src/json/json-forwards.h \
-    src/json/json.h \
-    src/compile.h \
-    #src/confidenceinterval.h \
-    src/project_config.h \
-    src/datafile.h \
-    src/ellipsoid.h \
-    src/station_axis.h \
-    src/axisobs.h \
-    src/station_bascule.h \
-    src/matrixordering.h \
-    gui/mainwindow.h \
-    gui/calcthread.h \
-    gui/configdialog.h \
-    gui/errordialog.h \
-    gui/applytransfodialog.h \
-    gui/sightmatrixdialog.h \
-    gui/conversiondialog.h \
-    src/info.h \
-    gui/dialogpreferences.h \
-    gui/framewidget.h \
-    gui/multisorttable.h \
-    gui/exportpointsdialog.h \
-    src/uni_stream.h \
-    src/varcovarmatrix.h
-
-LIBS += -lproj -lsqlite3
-
-win32 {
-    INCLUDEPATH += /usr/lib/mxe/usr/i686-w64-mingw32.static/include/
-    LIBS += -L/usr/lib/mxe/usr/i686-w64-mingw32.static/lib/
-    LIBS += -lboost_system-mt
-    LIBS += -lboost_filesystem-mt
-    LIBS += -lboost_date_time-mt
-    LIBS += -lboost_graph-mt
-}
-
-unix {
-    QMAKE_LFLAGS += -no-pie
-    INCLUDEPATH += /usr/local/proj82/include/
-    LIBS += -L/usr/local/proj82/lib/
-    LIBS +=  -ldl
-    LIBS += -lboost_system
-    LIBS += -lboost_filesystem
-    LIBS += -lboost_date_time
-    LIBS += -lboost_graph
-}
-
-FORMS += \
-    gui/exportcoorddialog.ui \
-    gui/infinityasctobasdialog.ui \
-    gui/maintables.ui \
-    gui/mainwindow.ui \
-    gui/configdialog.ui \
-    gui/errordialog.ui \
-    gui/applytransfodialog.ui \
-    gui/sightmatrixdialog.ui \
-    gui/conversiondialog.ui \
-    gui/dialogpreferences.ui \
-    gui/framewidget.ui \
-    gui/exportpointsdialog.ui \
-    gui/sinexdialog.ui
-
-TRANSLATIONS = gui/translations/Comp3D_fr.ts
-CONFIG += lrelease embed_translations
-
-RESOURCES += \
-    ressource.qrc
-
-OTHER_FILES += \
-    gui/translations/Comp3D_fr.ts \
-    gui/html/visu_comp.js \
-    gui/html/comp3d.css
-
-DISTFILES += \
-    README.md \
-    changelog.txt
-
-DEFINES += QT_DEPRECATED_WARNINGS
-
-unix {
-    projlib.path = /usr/lib/
-    projlib.files = /usr/local/proj82/lib/libproj.a
-    target.path = /usr/bin/
-    INSTALLS += projlib target
-}
-]===]
