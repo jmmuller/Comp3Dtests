@@ -40,7 +40,7 @@ jobs:
         path: 'doc_uni/'
 
   build_linux:
-    if: true
+    if: false
     runs-on: ubuntu-latest
     needs: build_doc
 
@@ -155,6 +155,20 @@ jobs:
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
+      with:
+          version:      5.15.2
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2019_64
+          dir:          ${{ runner.temp }}
+          modules:      
+          setup-python: false
+
+    - name: Download JOM
+      uses: suisei-cn/actions-download-file@v1
+      with:
+          url:    http://download.qt.io/official_releases/jom/jom.zip
+          target: ${{ runner.temp }}\
 
     - name: Install Miniconda 
       uses: conda-incubator/setup-miniconda@v3
@@ -165,13 +179,19 @@ jobs:
       run: conda install -y proj
       if: steps.cache-conda-gdal.outputs.cache-hit != 'true'
 
+    - name: Set up Visual Studio shell
+      uses: egor-tensin/vs-shell@v2
+      with:
+          arch: x64
+          
     - name: Build Comp3D
       shell: bash
       run: |
+        ls
         mkdir -p autobuild
         cd autobuild
         qmake ../Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${{env.COMP3D_DOC_DIR}}"
-        make
+        jom/jom.exe
 
     - name: Build tests
       working-directory: ./tests
