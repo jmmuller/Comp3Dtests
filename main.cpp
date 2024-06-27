@@ -29,8 +29,11 @@
 
 #include <iostream>
 #include <string>
+
+#ifndef _WIN32
 #include <getopt.h>
-//#include <Eigen/Dense>
+#endif
+
 #include <locale.h>
 #include "src/project.h"
 
@@ -124,7 +127,9 @@ int main(int argc, char *argv[])
     std::cout<<"------------------------------------------------------------------------"<<std::endl;
     std::cout<<" end of "<<COMP3D_VERSION<<std::endl;
     std::cout<<"------------------------------------------------------------------------"<<std::endl;
+#ifdef USE_QT
     delete a;
+#endif
     return result;
 }
 
@@ -151,6 +156,8 @@ int main_auto(int argc, char *argv[])
     int c;
     bool force_lang=false;
 
+
+#ifndef _WIN32
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
@@ -211,6 +218,9 @@ int main_auto(int argc, char *argv[])
     }
 
     std::string filename=argv[optind];
+#else
+    std::string filename="?";
+#endif
 
     std::cout<<"Try to compute "<<filename<<std::endl;
     std::ostringstream error_msg;
