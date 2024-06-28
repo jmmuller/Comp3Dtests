@@ -5,12 +5,12 @@ cmake_minimum_required(VERSION 3.15)
 project(Comp3D)
 set(COMP3D_TARGET Comp3D)
 
+set(TRANSLATIONS fr)
+
 # strict C++17 required
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-set(TRANSLATIONS fr)
 
 #######################################################
 ##        Options
@@ -57,7 +57,7 @@ list (TRANSFORM BOOST_COMPONENTS_FULL PREPEND Boost::)
 find_package(Boost ${BOOST_VERSION_MIN} REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 # Proj
-set(PROJ_ROOT /usr/local/proj82)
+set(PROJ_ROOT /usr/local/proj92)
 find_package(PROJ 9.2.1 REQUIRED)
 
 # Qt
@@ -155,6 +155,54 @@ set(SOURCES_GUI
     gui/exportpointsdialog.cpp
 )
 
+set(HEADERS
+    src/info.h
+    src/fformat.h
+    src/filerefjson.h
+    src/leastsquares.h
+    src/misc_tools.h
+    src/obs.h
+    src/point.h
+    src/coord.h
+    src/projection.h
+    src/station.h
+    src/station_eq.h
+    src/station_simple.h
+    src/parameter.h
+    src/project.h
+    src/mathtools.h
+    src/station_hz.h
+    src/json/json-forwards.h
+    src/json/json.h
+    src/compile.h
+    src/project_config.h
+    src/datafile.h
+    src/ellipsoid.h
+    src/station_axis.h
+    src/axisobs.h
+    src/station_bascule.h
+    src/matrixordering.h
+    src/uni_stream.h
+    src/varcovarmatrix.h
+    gui/customtablewidgetitem.h
+    gui/exportcoorddialog.h
+    gui/infinityasctobasdialog.h
+    gui/sinexdialog.h
+    gui/maintables.h
+    gui/mainwindow.h
+    gui/calcthread.h
+    gui/configdialog.h
+    gui/errordialog.h
+    gui/applytransfodialog.h
+    gui/sightmatrixdialog.h
+    gui/conversiondialog.h
+    gui/dialogpreferences.h
+    gui/framewidget.h
+    gui/multisorttable.h
+    gui/exportpointsdialog.h
+)
+
+
 #######################################################
 ##        Translation
 #######################################################
@@ -182,7 +230,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/cmake_qm.qrc"
 ##        Target
 #######################################################
 
-add_executable(${COMP3D_TARGET} ${SOURCES} ${SOURCES_GUI} ressource.qrc ${CMAKE_BINARY_DIR}/cmake_qm.qrc ${CMAKE_BINARY_DIR}/git_revision.cpp )
+add_executable(${COMP3D_TARGET} ${SOURCES} ${SOURCES_GUI} ${HEADERS} ressource.qrc ${CMAKE_BINARY_DIR}/cmake_qm.qrc ${CMAKE_BINARY_DIR}/git_revision.cpp )
 
 target_include_directories (${COMP3D_TARGET} PRIVATE src gui . ${PROJ_INCLUDE_DIRS})
 target_link_libraries (${COMP3D_TARGET} PRIVATE COMP3D_compiler_flags ${BOOST_COMPONENTS_FULL} ${QT_COMPONENTS_FULL} ${PROJ_LIBRARIES} Eigen3::Eigen)
@@ -198,5 +246,3 @@ target_compile_definitions(${COMP3D_TARGET} PRIVATE
 	$<$<BOOL:${USE_RES}>:USE_RES>
 	$<$<BOOL:${USE_GUI}>:USE_GUI>
 )
-
-
