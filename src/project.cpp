@@ -1765,9 +1765,17 @@ bool Project::exportSINEX(const std::string &filename,std::vector<Point*> &selec
         struct tm genTime{},obsTime{};
 
         time_t timestamp = time( nullptr );
-//        gmtime_r(&timestamp, &genTime);
+#ifndef _MSC_VER
+        gmtime_r(&timestamp, &genTime);
+#else
+        gmtime_s(&genTime, &timestamp); // Yes, args are in reverse order in Microsoft CRT ...
+#endif
         timestamp = jsonSINEX.get("obsTime",0).asInt64();
-//        gmtime_r(&timestamp, &obsTime);
+#ifndef _MSC_VER
+        gmtime_r(&timestamp, &obsTime);
+#else
+        gmtime_s(&obsTime, &timestamp);
+#endif
         FortranFormat::FFormat fmt;
         
         sinexFile << fmt.toStringf(
