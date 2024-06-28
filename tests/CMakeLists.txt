@@ -28,7 +28,7 @@ set(USE_RES ON)
 find_package(Eigen3 REQUIRED NO_MODULE)
 
 # Boost
-set (BOOST_VERSION_MIN 1.74.0)
+set (BOOST_VERSION_MIN 1.60.0)
 set (BOOST_COMPONENTS system filesystem date_time graph)
 set (BOOST_COMPONENTS_FULL ${BOOST_COMPONENTS})
 list (TRANSFORM BOOST_COMPONENTS_FULL PREPEND Boost::)

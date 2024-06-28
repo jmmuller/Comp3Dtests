@@ -25,7 +25,7 @@ cd /c3d/
 lrelease Comp3D_cpp.pro
 mkdir -p autobuild/
 cd autobuild/
-qmake ../Comp3D_cpp.pro CONFIG+=release COMP3D_DOC_DIR="${COMP3D_DOC_DIR}"
+cmake .. -D DCOMP3D_DOC_DIR="${COMP3D_DOC_DIR}"
 make clean
 make -j$NBRP
 
@@ -34,7 +34,7 @@ echo -e "${GREEN}Windows cross-compilation${STOP}"
 cd /c3d/
 mkdir -p autobuild-mxe/
 cd autobuild-mxe/
-x86_64-w64-mingw32.static-qmake-qt5 ../Comp3D_cpp.pro COMP3D_DOC_DIR="${COMP3D_DOC_DIR}"
+x86_64-w64-mingw32.static-cmake .. -D DCOMP3D_DOC_DIR="${COMP3D_DOC_DIR}"
 make clean
 make -j$NBRP
 cp -R /usr/local/proj82/share/proj/ release/proj
@@ -43,7 +43,7 @@ echo -e "${GREEN}Compile tests on linux...${STOP}"
 cd /c3d/tests/
 mkdir -p autobuild/
 cd autobuild/
-qmake ../tests.pro
+cmake ..
 make clean
 make -j$NBRP
 cd ..
@@ -55,7 +55,7 @@ echo -e "${GREEN}Compile tests on wine...${STOP}"
 cd /c3d/tests/
 mkdir -p autobuild-mxe/
 cd autobuild-mxe/
-x86_64-w64-mingw32.static-qmake-qt5 ../tests.pro
+x86_64-w64-mingw32.static-cmake ..
 make clean
 make -j$NBRP
 cd ..
