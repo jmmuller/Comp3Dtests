@@ -1,0 +1,221 @@
+name: Build MMVII Linux/Windows
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'jm_tests'
+
+jobs:
+
+  build_doc:
+    if: true
+    runs-on: ubuntu-latest
+    outputs:
+      comp3dversion: ${{ steps.do-build-doc.outputs.comp3dversion }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install sphinx
+      run: |
+        sudo apt-get install -y --fix-missing python3-pip python3-stemmer qttranslations5-l10n libjs-mathjax
+        pip3 install sphinx sphinx-intl sphinx-mathjax-offline
+ 
+    - name: Build doc
+      id: do-build-doc
+      run: |
+        cd doc_uni
+        ./build_doc.sh
+        cd ..
+        VERSION=`cat src/compile.h | grep "COMP3D_VERSION" | sed 's/.*COMP3D v//' | sed 's/[^0-9.a-zA-Z_].*//'`
+        COMP3D_DOC_DIR="/usr/share/doc/comp3d/${VERSION}"
+        #echo "COMP3D_DOC_DIR=${COMP3D_DOC_DIR}" >> $GITHUB_ENV
+        echo "comp3dversion=${VERSION}" >> "$GITHUB_OUTPUT"
+        echo ${VERSION}
+        echo "done"
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: 'doc'
+        path: 'doc_uni/'
+
+  build_linux:
+    if: true
+    runs-on: ubuntu-latest
+    needs: build_doc
+
+    steps:
+        
+    - uses: actions/checkout@v4
+
+    - name: Get all tags for correct version determination
+      working-directory:  ${{ github.workspace }}
+      run: |
+          git fetch --all --tags -f
+          
+    - name: Install deps
+      run: |
+        sudo apt update
+        sudo apt install wget unzip build-essential pkg-config libboost-all-dev qttools5-dev-tools qttools5-dev qtbase5-dev git doxygen sqlite libsqlite3-dev cmake fuse libtiff-dev libcurl4-openssl-dev libeigen3-dev
+
+    - name: Install libproj
+      run: |
+        wget https://download.osgeo.org/proj/proj-8.2.1.tar.gz
+        tar -xf proj-8.2.1.tar.gz
+        cd proj-8.2.1
+        mkdir build
+        cd build
+        cmake .. -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF  -DENABLE_CURL=OFF -DENABLE_TIFF=OFF -DCMAKE_INSTALL_PREFIX=/usr/local/proj82
+        make clean
+        make -j5
+        sudo make install
+
+    - name: Install proj data
+      run: |
+        wget https://download.osgeo.org/proj/proj-datumgrid-1.8.zip
+        unzip proj-datumgrid-1.8.zip -d proj-data
+        sudo mkdir -p /usr/local/proj82/share/proj/
+        sudo cp proj-data/* /usr/local/proj82/share/proj/
+
+    - name: Install appimage
+      run: |
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod a+x *.AppImage
+
+    - name: Build Comp3D
+      run: |
+        mkdir -p autobuild/
+        cd autobuild/
+        cmake ..
+        cmake --build . --config Release
+
+    - name: Build tests
+      working-directory: ./tests
+      run: |
+        mkdir -p autobuild/
+        cd autobuild/
+        cmake ..
+        cmake --build . --config Release
+
+    - name: Run tests
+      working-directory: ./tests
+      if: false
+      run: |
+        autobuild/Comp3D_tests
+
+    - name: Package
+      env:
+        VERSION: ${{needs.build_doc.outputs.comp3dversion}}
+      run: |
+        distrib/make_appimage.sh  ./autobuild/ /tmp/AppDir "${{env.COMP3D_DOC_DIR}}"
+        distrib/make_ziplinux.sh $(ls -t Comp3d5v5.*.AppImage | head -1)
+        distrib/make_appimagedeb.sh $(ls -t Comp3d5v5.*.AppImage | head -1)
+        mv $(ls -t distrib/comp3d5v5.*.deb | head -1) .
+        ls -l
+        echo v__"$VERSION"__
+        echo "done"
+
+
+    - name: Remove previous Comp3D release
+      env:
+         GH_TOKEN: ${{ github.token }}
+      continue-on-error: true
+      run: gh release delete Comp3D_linux -y --cleanup-tag
+
+    - name: Upload Comp3D
+      uses: softprops/action-gh-release@v2
+      with:
+          name: 'Comp3D linux - Latest'
+          tag_name: Comp3D_linux
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            comp3d_*_linux.tgz
+            comp3d_*_linux_deb.tgz
+          
+
+  build_win:
+    if: true
+    runs-on: windows-latest
+    needs: build_doc
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get all tags for correct version determination
+      working-directory:  ${{ github.workspace }}
+      run: |
+          git fetch --all --tags -f
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+          version:      5.15.2
+          host:         windows
+          target:       desktop
+          arch:         win64_msvc2019_64
+          dir:          ${{ runner.temp }}
+          modules:      
+          setup-python: false
+
+    - name: Install Miniconda 
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+         auto-update-conda: true
+          
+    - name: Install PROJ with miniconda
+      run: |
+           conda install -y proj
+           $env:CONDA_PREFIX=(conda info --base) + "\envs"
+           echo CONDA_PREFIX=$env:CONDA_PREFIX >> $env:GITHUB_ENV
+           echo "CONDA: " $env:CONDA_PREFIX
+           dir $env:CONDA_PREFIX
+      if: steps.cache-conda-gdal.outputs.cache-hit != 'true'
+
+    - name: Set up Visual Studio shell
+      uses: egor-tensin/vs-shell@v2
+      with:
+          arch: x64
+
+    - name: Install boost with miniconda
+      run: |
+           conda install -y boost
+    
+    - name: Install eigen with miniconda
+      run: |
+           conda install -y eigen
+    
+    - name: Install curl with miniconda
+      run: |
+           conda install -y curl
+      
+    - name: Build Comp3D
+      shell: cmd
+      run: |
+        echo "temp:"
+        dir ${{ runner.temp }}
+        echo "workspace:"
+        dir ${{ github.workspace }}
+        echo "src:"
+        dir ${{ github.workspace }}\src
+        mkdir -p autobuild
+        cd autobuild
+        set PATH=%PATH%;%CONDA_PREFIX%\Library\bin
+        cmake .. -DEigen3_DIR=${{ github.workspace }}\eigen-3.3.8\cmake
+        cmake --build . --config Release
+
+    - name: Build tests
+      working-directory: ./tests
+      shell: bash
+      run: |
+        mkdir -p autobuild
+        cd autobuild
+        cmake ..
+        cmake --build . --config Release
+
+    - name: Run tests
+      working-directory: tests
+      run: |
+        autobuild/Comp3D_tests.exe
+

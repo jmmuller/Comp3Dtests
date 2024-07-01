@@ -122,7 +122,7 @@ set(SOURCES
 ##        Target
 #######################################################
 
-add_executable(${COMP3D_TARGET} ${SOURCES} ../ressource.qrc ${CMAKE_BINARY_DIR}/../git_revision.cpp )
+add_executable(${COMP3D_TARGET} ${SOURCES} ../ressource.qrc ${CMAKE_BINARY_DIR}/git_revision.cpp )
 
 target_include_directories (${COMP3D_TARGET} PRIVATE ../src . ${PROJ_INCLUDE_DIRS})
 target_link_libraries (${COMP3D_TARGET} PRIVATE COMP3D_compiler_flags ${BOOST_COMPONENTS_FULL} ${QT_COMPONENTS_FULL} ${PROJ_LIBRARIES} Eigen3::Eigen)

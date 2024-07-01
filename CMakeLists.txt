@@ -57,8 +57,8 @@ list (TRANSFORM BOOST_COMPONENTS_FULL PREPEND Boost::)
 find_package(Boost ${BOOST_VERSION_MIN} REQUIRED COMPONENTS ${BOOST_COMPONENTS})
 
 # Proj
-set(PROJ_ROOT /usr/local/proj92)
-find_package(PROJ 9.2.1 REQUIRED)
+set(PROJ_ROOT /usr/local/proj82)
+find_package(PROJ REQUIRED)
 
 # Qt
 set (QT_COMPONENTS Widgets)
