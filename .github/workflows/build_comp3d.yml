@@ -1,10 +1,18 @@
-name: Build MMVII Linux/Windows
+name: Build Comp3D Linux/Windows
 
 on:
   push:
     branches:
       - 'main'
-      - 'gh-tests'
+    tags:
+      - 'v*'
+  release:
+    types:
+      - created
+
+permissions:
+  contents: write
+  packages: write
 
 env:
   PROJ_URL: https://download.osgeo.org/proj/proj-9.3.1.tar.gz
@@ -139,12 +147,13 @@ jobs:
     - name: Upload Comp3D
       uses: softprops/action-gh-release@v2
       with:
-          name: 'Comp3D linux - Latest'
-          tag_name: Comp3D_linux
+          name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' ? 'Comp3D linux - Latest' : format('Comp3D linux - {0}', github.ref_name) }}
+          tag_name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' ? 'Comp3D_linux' : github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             comp3d_*_linux.tgz
             comp3d_*_linux_deb.tgz
+          draft: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           
 
   build_win:
@@ -236,9 +245,10 @@ jobs:
     - name: Upload Comp3D
       uses: softprops/action-gh-release@v2
       with:
-          name: 'Comp3D win - Latest'
-          tag_name: Comp3D_win
+          name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' ? 'Comp3D win - Latest' : format('Comp3D win - {0}', github.ref_name) }}
+          tag_name: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' ? 'Comp3D_win' : github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             comp3d_*_win.zip
+          draft: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
