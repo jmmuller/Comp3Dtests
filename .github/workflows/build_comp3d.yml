@@ -1,10 +1,19 @@
-name: Build MMVII Linux/Windows
+name: Build Comp3D Linux/Windows
 
 on:
   push:
     branches:
       - 'main'
       - 'gh-tests'
+    tags:
+      - 'v*'
+  release:
+    types:
+      - created
+
+permissions:
+  contents: write
+  packages: write
 
 env:
   PROJ_URL: https://download.osgeo.org/proj/proj-9.3.1.tar.gz
@@ -145,6 +154,7 @@ jobs:
           files: |
             comp3d_*_linux.tgz
             comp3d_*_linux_deb.tgz
+          draft: ${{ github.event_name == 'push' }}
           
 
   build_win:
@@ -241,4 +251,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             comp3d_*_win.zip
+          draft: ${{ github.event_name == 'push' }}
 
