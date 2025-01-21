@@ -41,6 +41,7 @@
 #include "conversiondialog.h"
 #include "dialogpreferences.h"
 #include "sinexdialog.h"
+#include "filesystem_compat.h"
 
 MainWindow::MainWindow(QApplication *a, QWidget *parent) :
     QMainWindow(parent),ui(new Ui::MainWindow),project(nullptr),
@@ -813,7 +814,18 @@ void MainWindow::showHelp()
     if ( QFileInfo(doc_dir).isRelative())
         doc_dir = qApp->applicationDirPath() + "/" + doc_dir;
     if (std::getenv("APPDIR"))                  // Env var APPDIR to work with AppImage
+    {
         doc_dir = std::getenv("APPDIR") + doc_dir;
+        std::cout<<std::getenv("APPDIR")<<"\n"<<doc_dir.toStdString()<<std::endl;
+        std::cout<<"home: *"<<std::getenv("HOME")<<"*"<<std::endl;
+        if (std::getenv("HOME"))
+        {
+            auto doc_copy_dir = fs::path(std::getenv("HOME")) / COMP3D_HOME_DIR;
+            fs::copy(doc_dir.toStdString(), doc_copy_dir, fs::copy_options::overwrite_existing | fs::copy_options::recursive);
+            doc_dir = doc_copy_dir.generic_string().c_str();
+            std::cout<<"new doc dir: "<<doc_dir.toStdString()<<std::endl;
+        }
+    }
     QString doc_path_tpl = doc_dir + "/" + COMP3D_DOC_INDEX;
 
     QString lang = QSettings().value("/Comp3D/Language","en").toString();

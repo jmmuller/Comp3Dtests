@@ -54,6 +54,8 @@
 #define COMP3D_ORGANIZATION_NAME    "IGN"
 #define COMP3D_ORGANIZATION_DOMAIN  "ign.fr"
 
+#define COMP3D_HOME_DIR             "docComp3D"
+
 #define WRITEWIDTH 15
 #define WRITEPREC 7
 #define MAXFILEDEPTH 5
