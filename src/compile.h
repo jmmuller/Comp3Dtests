@@ -48,8 +48,6 @@
 #define COMP3D_CONTACT "comp3d@ign.fr"
 #define COMP3D_REPO "https://github.com/IGNF/Comp3D"
 
-#define COMP3D_CONFIG_FILENAME "comp3d_config.txt"
-
 #define COMP3D_APPLICATION_NAME     "Comp3D"
 #define COMP3D_ORGANIZATION_NAME    "IGN"
 #define COMP3D_ORGANIZATION_DOMAIN  "ign.fr"
